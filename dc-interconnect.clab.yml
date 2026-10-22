@@ -1,0 +1,73 @@
+name: dc-interconnect
+
+topology:
+  nodes:
+    # Spines (Cœur du réseau)
+    DC1-SPIN1:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+    DC2-SPIN1:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+
+    # Leafs DC1 (2 Leafs d'accès + 1 Border Leaf)
+    DC1-LEAF1:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+    DC1-LEAF2:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+    DC1-BL1:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+
+    # Leafs DC2 (2 Leafs d'accès + 1 Border Leaf)
+    DC2-LEAF1:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+    DC2-LEAF2:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+    DC2-BL1:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+
+    # Nuage d'interconnexion (WAN / MPLS)
+    MPLS-Cloud:
+      kind: linux
+      image: quay.io/frrouting/frr:8.5.2
+
+    # Hôtes / PC de test (2 de chaque côté)
+    PC1:
+      kind: linux
+      image: ghcr.io/srl-labs/alpine:latest
+    PC2:
+      kind: linux
+      image: ghcr.io/srl-labs/alpine:latest
+    PC3:
+      kind: linux
+      image: ghcr.io/srl-labs/alpine:latest
+    PC4:
+      kind: linux
+      image: ghcr.io/srl-labs/alpine:latest
+
+  links:
+    # --- Connexions Spines <-> Leafs DC1 ---
+    - endpoints: ["DC1-SPIN1:eth1", "DC1-LEAF1:eth1"]
+    - endpoints: ["DC1-SPIN1:eth2", "DC1-LEAF2:eth1"]
+    - endpoints: ["DC1-SPIN1:eth3", "DC1-BL1:eth1"]
+
+    # --- Connexions Spines <-> Leafs DC2 ---
+    - endpoints: ["DC2-SPIN1:eth1", "DC2-LEAF1:eth1"]
+    - endpoints: ["DC2-SPIN1:eth2", "DC2-LEAF2:eth1"]
+    - endpoints: ["DC2-SPIN1:eth3", "DC2-BL1:eth1"]
+
+    # --- Interconnexion des Border Leafs via le Nuage MPLS (DCI) ---
+    - endpoints: ["DC1-BL1:eth2", "MPLS-Cloud:eth1"]
+    - endpoints: ["DC2-BL1:eth2", "MPLS-Cloud:eth2"]
+
+    # --- Connexion des PC aux Leafs (2 par DC) ---
+    - endpoints: ["DC1-LEAF1:eth2", "PC1:eth1"]
+    - endpoints: ["DC1-LEAF2:eth2", "PC2:eth1"]
+    - endpoints: ["DC2-LEAF1:eth2", "PC3:eth1"]
+    - endpoints: ["DC2-LEAF2:eth2", "PC4:eth1"]
